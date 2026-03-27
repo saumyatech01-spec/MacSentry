@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAISuggestion } from '../hooks/useAISuggestion'
-import { AISuggestionPanel } from './AISuggestionPanel'
+import AISuggestionPanel from './AISuggestionPanel'
 
 const IMPACT = {
   CRITICAL:['Immediate system compromise risk','Active exploitation possible','Data exfiltration exposure','Lateral movement risk'],
