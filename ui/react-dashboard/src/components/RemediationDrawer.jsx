@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAISuggestion } from '../hooks/useAISuggestion'
+import { AISuggestionPanel } from './AISuggestionPanel'
 
 const IMPACT = {
   CRITICAL:['Immediate system compromise risk','Active exploitation possible','Data exfiltration exposure','Lateral movement risk'],
@@ -10,18 +12,18 @@ const IMPACT = {
 const MITRE_NAMES = {
   'T1543.004':'LaunchDaemon Persistence', 'T1574.006':'DYLD Injection',
   'T1078':'Valid Accounts / Auto-Login',  'T1053':'Cron/AT Scheduled Task',
-  'T1176':'Browser Extension',           'T1059.004':'Shell Backdoor',
-  'T1040':'Network Sniffing',            'T1557.002':'ARP Poisoning',
-  'T1486':'FileVault Disabled',          'T1496':'Cryptomining',
-  'T1203':'Browser Exploit',             'T1195':'Supply Chain / Outdated Packages',
+  'T1176':'Browser Extension',            'T1059.004':'Shell Backdoor',
+  'T1040':'Network Sniffing',             'T1557.002':'ARP Poisoning',
+  'T1486':'FileVault Disabled',           'T1496':'Cryptomining',
+  'T1203':'Browser Exploit',              'T1195':'Supply Chain / Outdated Packages',
   'T1542':'Secure Boot Bypass',
 }
 const SEV_META = {
-  CRITICAL:{ color:'#FF3B30', bg:'rgba(255,59,48,.15)',  icon:'🔴', label:'Critical' },
-  HIGH:    { color:'#FF9500', bg:'rgba(255,149,0,.15)',  icon:'🟠', label:'High'     },
+  CRITICAL:{ color:'#FF3B30', bg:'rgba(255,59,48,.15)',   icon:'🔴', label:'Critical' },
+  HIGH:    { color:'#FF9500', bg:'rgba(255,149,0,.15)',   icon:'🟠', label:'High'     },
   MEDIUM:  { color:'#FFD60A', bg:'rgba(255,214,10,.15)', icon:'🟡', label:'Medium'   },
-  LOW:     { color:'#30D158', bg:'rgba(48,209,88,.15)',  icon:'🟢', label:'Low'      },
-  SAFE:    { color:'#34C759', bg:'rgba(52,199,89,.12)',  icon:'✅', label:'Safe'     },
+  LOW:     { color:'#30D158', bg:'rgba(48,209,88,.15)',   icon:'🟢', label:'Low'      },
+  SAFE:    { color:'#34C759', bg:'rgba(52,199,89,.12)',   icon:'✅', label:'Safe'     },
 }
 
 function CopyButton({ text }) {
@@ -46,6 +48,17 @@ export default function RemediationDrawer({ finding, onClose }) {
   const cmds    = parseCommands(finding.recommendation)
   const mitre   = finding.mitre_technique ? MITRE_NAMES[finding.mitre_technique] : null
 
+  // AI suggestion hook — normalise the finding shape for the hook/API
+  const aiFinding = {
+    check_id:    finding.check_id    || finding.id    || '',
+    title:       finding.check       || finding.name  || '',
+    description: finding.detail      || '',
+    severity:    finding.severity    || '',
+    platform:    finding.platform    || 'macOS',
+    evidence:    finding.evidence    || finding.detail || '',
+  }
+  const { status, suggestion, error, getSuggestion, reset } = useAISuggestion(aiFinding)
+
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
@@ -59,7 +72,6 @@ export default function RemediationDrawer({ finding, onClose }) {
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
         <div className="drawer-body">
-
           <div className="drawer-section">
             <div className="drawer-section-title">Risk Level</div>
             <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center' }}>
@@ -73,21 +85,42 @@ export default function RemediationDrawer({ finding, onClose }) {
               )}
             </div>
           </div>
-
           <div className="drawer-section">
             <div className="drawer-section-title">What Was Found</div>
             <div className="drawer-description">{finding.detail}</div>
           </div>
-
           <div className="drawer-section">
             <div className="drawer-section-title">Potential Impact</div>
             <ul className="impact-list">
               {impacts.map((line, i) => <li key={i}>{line}</li>)}
             </ul>
           </div>
-
           <div className="drawer-section">
-            <div className="drawer-section-title">How to Fix</div>
+            <div className="drawer-section-title" style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+              <span>How to Fix</span>
+              {/* ✨ AI Suggestion Button */}
+              {status === 'idle' || status === 'error' ? (
+                <button
+                  className="ai-suggest-btn"
+                  onClick={getSuggestion}
+                  title="Get AI-powered, privacy-safe remediation steps"
+                >
+                  🤖 Get Our Trusted Security Agents Suggestion
+                </button>
+              ) : status === 'loading' ? (
+                <button className="ai-suggest-btn ai-suggest-btn--loading" disabled>
+                  ⏳ Consulting AI Agent…
+                </button>
+              ) : (
+                <button
+                  className="ai-suggest-btn ai-suggest-btn--reset"
+                  onClick={reset}
+                  title="Clear AI suggestion"
+                >
+                  ↺ Reset
+                </button>
+              )}
+            </div>
             <div className="drawer-description" style={{ marginBottom: cmds.length ? 12 : 0 }}>
               {finding.recommendation}
             </div>
@@ -100,6 +133,11 @@ export default function RemediationDrawer({ finding, onClose }) {
             ))}
           </div>
 
+          {/* AI Suggestion Panel — renders below How to Fix when active */}
+          {status !== 'idle' && (
+            <AISuggestionPanel status={status} suggestion={suggestion} error={error} />
+          )}
+
           <div className="drawer-section">
             <div className="drawer-section-title">Verify After Fix</div>
             <div className="drawer-description" style={{ fontSize:12 }}>
@@ -111,7 +149,6 @@ export default function RemediationDrawer({ finding, onClose }) {
               to re-run just this module.
             </div>
           </div>
-
         </div>
       </div>
     </>
