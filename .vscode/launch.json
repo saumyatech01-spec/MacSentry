@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Full Scan (verbose)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/core/scanner_engine.py",
+      "args": ["--mode", "full", "--verbose", "--no-cve"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Quick Scan (steps 1,2,3)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/core/scanner_engine.py",
+      "args": ["--mode", "quick", "--steps", "1,2,3"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Run All Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/", "-v", "--tb=short"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
