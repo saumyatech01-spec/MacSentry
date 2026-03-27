@@ -1,0 +1,17 @@
+# MacSentry — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core runtime monitoring
+psutil>=5.9.0
+
+# PDF report generation
+reportlab>=4.0.0
+
+# Optional: enhanced HTTP for CVE API calls
+requests>=2.31.0
+
+# Testing
+pytest>=7.4.0
+
+# Optional: packaging as standalone app
+# pyinstaller>=6.0.0
