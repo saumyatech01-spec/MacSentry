@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react'
 
-const AI_API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:5002'
+// Use relative URL so Vite proxy (or Flask reverse proxy in prod) routes to the AI API
+// In dev: Vite proxies /api/ai-suggestion → localhost:5002
+// In prod: serve the built UI from behind the same host that serves the API
+const AI_API_URL = import.meta.env.VITE_AI_API_URL ?? ''
 
 /**
  * useAISuggestion
